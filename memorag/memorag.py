@@ -2,7 +2,7 @@
 # memory model  + infer
 from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
 import torch
-from semantic_text_splitter import TextSplitter
+# from semantic_text_splitter import TextSplitter
 import os
 from transformers.tokenization_utils_base import BatchEncoding
 
@@ -147,8 +147,10 @@ class MemoRAG(Model):
         self.memo_model = Memory(self.memo_model_name_or_path)
 
         self.retrival_model = None
-        self.text_spliter = TextSplitter.from_tiktoken_model(
-            "gpt-3.5-turbo", self.retrival_chunk_size)
+        # self.text_spliter = TextSplitter.from_tiktoken_model(
+        #     "gpt-3.5-turbo", self.retrival_chunk_size)
+
+        self.text_spliter = None
 
         self.corpus_chunk = None
 
