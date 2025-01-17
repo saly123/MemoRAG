@@ -73,8 +73,8 @@ Next, follow the instructions provided to complete the tasks.
         format_contextids = self.input2ids(context_prompt)
         self.memory = DynamicCache()
         with torch.no_grad():
-            self.model(**format_contextids, past_key_values=self.memory)
-        self.memory = self.model.past_key_values
+            model_output = self.model(**format_contextids, past_key_values=self.memory)
+        self.memory = model_output.past_key_values
         self.context = format_contextids
 
     def save(self, path):
@@ -120,7 +120,7 @@ Next, follow the instructions provided to complete the tasks.
 
         generation_kwargs = {"max_new_tokens": max_new_tokens, "do_sample": do_sample, "temperature": temperature}
         if self.memo_type == "longllm" and with_cache:
-            generation_kwargs["past_key_value"] = self.memory  # copy.deepcopy()???
+            generation_kwargs["past_key_values"] = self.memory  # copy.deepcopy()???
 
         query_input = [{"role": "system",
                         "content": "你是携程的酒店商服人员，你的服务对象是入驻携程平台的酒店商户，你的职责是回答商户关于酒店经营的问题。请你阅读“资料”，结合给定的意图层级结构回答“问题”。\n回答问题时必须严格遵守如下要求：\n(1)严格根据提取的原始片段内容生成答案，尽量从片段中摘取能回答该问题的专业词汇，不可以出现资料中没有的内容。\n(2)在资料信息不足以回答问题或者资料与问题不相关时，你必须直接回答“抱歉，经过检索我没有找到这个问题的答案。”\n(3)如果资料中没有正面直接的回答问题，你必须直接回答“抱歉，经过检索我没有找到这个问题的答案。”。\n(4)对于<richText><description>DESCRIPTION</description><link>LINK</link></richText>格式的标签，如需引用仅需输出LINK即可，无需输出DESCRIPTION文本。\n(5)如果你在回答中让用户参考图片，那么你就必须输出图片LINK。\n(6)回答问题时语言要简洁，语句要通顺并且具有逻辑性，不可以出现语义重复，例如：不能出现“加入xx加盟”、“根据xx”类似的表达。\n(7)回答的开头需要结合问题进行改写输出，但是不要直接将意图结构输出，也不要出现类似“子节点意图”类似表述。回答内容必须与问题直接相关，不要出现问题没有提到的内容。\n(8)必须按照给定的回答角度和能提取出相关内容的意图层级结构形成答案，如果资料中没有直接提到某个子意图，则该子意图一定不要输出。\n(9)不要出现请咨询客服等话术，不要出现重复的内容和多个连续的“\n”字符，生成的回答必须与问题相关。\n(10)如果回答的内容在资料中有类似<richText></richText>的操作内容，请正确引用并输出对应的LINK文本。\n(11)请直接输出最终的回答，回答的开头一定不要出现类似：“关于xx”、“我可以从xx”、“虽然资料中没有直接提到xx”、“根据资料xx”、“xx提供的资料xx”的句式，请直接正面回答问题。请严格按照前面的要求输出回答，不需要输出对资料的总结。\n(12)请严格按照给定的意图结构回答，不要编造新的结构，如果某个意图要点在资料中找不到相关内容解释，请一定不要只输出该意图。输出的每个意图需要一定的简单阐述，最终的输出应该尽量简洁。输出格式尽量紧凑，单独的小要点尽量合并。\n(13)请一定不要输出资料中没有出现的超链接，也不要编造<richText><link>LINK</link></richText>格式、<richText><link>https://example.com/</link></richText>格式、https://example.com/格式的输出。\n(14)如果资料足以回答问题，请一定不要在回答中混合输出“抱歉，经过检索我没有找到这个问题的答案。”，也一定不要在回答中混合输出“具体内容未详细提及”。\n(15)回答中一定不要出现类似“https://example.com/”的内容。\n(16)回答多个问题时，请将原来的问题修改为符合语法逻辑的句子，多个问题中，如果某个问题的回答是”抱歉，经过检索我没有找到这个问题的答案。“，请一定不要输出该问题。\n(17)输出的内容一定不要出现重复。\n(18)错误的输出格式1：【根据问题，儿童政策可以设置的种类如下：\n1. 是否允许儿童入住。抱歉，经过检索我没有找到这个问题的答案】。错误的输出格式2：【云梯：抱歉，经过检索我没有找到这个问题的答案】。错误的输出格式3：【psi奖励分：资料中未提及】。请一定不要出现类似前面的错误格式。\n(19)输出的要点请一定不要带有“抱歉，经过检索我没有找到这个问题的答案”的内容。"},
@@ -134,7 +134,7 @@ Next, follow the instructions provided to complete the tasks.
 
         if self.memo_type == "longllm" and with_cache:
             # 推理结束后删除memory缓存
-            del generation_kwargs["past_key_value"]
+            del generation_kwargs["past_key_values"]
             torch.cuda.empty_cache()
 
         return response
