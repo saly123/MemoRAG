@@ -171,8 +171,8 @@ class MemoRAG():
 
     def memorize(self, context, save_dir):
         self.memo_model.memorize(context)
-        self.corpus_chunk = self.text_spliter.split_text(context)
-        self.retrival_model.add(self.corpus_chunk)  # 加入检索库
+        # self.corpus_chunk = self.text_spliter.split_text(context)
+        # self.retrival_model.add(self.corpus_chunk)  # 加入检索库
 
         if save_dir:
             if not os.path.exists(save_dir):
